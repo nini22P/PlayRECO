@@ -1,3 +1,3 @@
-# PLay RECO
+# Play RECO
 
-Record playtime
+Record Playtime
