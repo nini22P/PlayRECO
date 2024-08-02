@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.github.nini22p.playreco.room.dao.AppInfoDao
 import com.github.nini22p.playreco.room.dao.UsageDao
+import com.github.nini22p.playreco.room.entity.AppInfoEntity
 import com.github.nini22p.playreco.room.entity.UsageEntity
 
-@Database(entities = [UsageEntity::class], version = 1)
+@Database(entities = [UsageEntity::class, AppInfoEntity::class], version = 1)
 abstract class UsageDatabase : RoomDatabase() {
     abstract fun usageDao(): UsageDao
+    abstract fun appInfoDao(): AppInfoDao
 
     companion object {
         @Volatile

@@ -1,27 +1,23 @@
 package com.github.nini22p.playreco.viewmodel
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.app.usage.UsageStatsManager
-import android.content.Context
-import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.github.nini22p.playreco.room.database.UsageDatabase
+import com.github.nini22p.playreco.room.entity.AppInfoEntity
 import com.github.nini22p.playreco.room.entity.UsageEntity
+import com.github.nini22p.playreco.room.repository.AppInfoRepository
 import com.github.nini22p.playreco.room.repository.UsageRepository
 import com.github.nini22p.playreco.utils.getAppInfo
-import com.github.nini22p.playreco.utils.getUserInstalledApps
+import com.github.nini22p.playreco.utils.getUsage
+import com.github.nini22p.playreco.utils.usageFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 enum class Interval {
     DAILY,
@@ -47,18 +43,25 @@ val dateFormat = mapOf(
 class UsageViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application
     private val usageRepository: UsageRepository
+    private val appInfoRepository: AppInfoRepository
+    lateinit var appInfo: List<AppInfoEntity>
 
     init {
+        viewModelScope.launch {
+            appInfo = getAppInfo(context)
+        }
         val database = UsageDatabase.getDatabase(getApplication())
         usageRepository = UsageRepository(database.usageDao())
+        appInfoRepository = AppInfoRepository(database.appInfoDao())
         fetchUsage()
     }
 
-    private val _interval = MutableLiveData<Interval>().apply { value = Interval.YEARLY }
-    private val interval: LiveData<Interval> get() = _interval
+    val interval = MutableLiveData<Interval>().apply { value = Interval.YEARLY }
 
     val usage: LiveData<List<UsageEntity>>? =
         interval.value?.let { usageRepository.getUsage(it).asLiveData() }
+
+    val selectApp: LiveData<List<AppInfoEntity>> = appInfoRepository.getAppInfo().asLiveData()
 
     fun clearUsage() {
         viewModelScope.launch {
@@ -68,75 +71,48 @@ class UsageViewModel(application: Application) : AndroidViewModel(application) {
 
     fun fetchUsage() {
         viewModelScope.launch {
-            val dailyUsage =
-                withContext(Dispatchers.IO) { usageFilter(getUsage(context, Interval.DAILY)) }
-            dailyUsage.forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
+            val dailyUsage = withContext(Dispatchers.IO) { getUsage(context, Interval.DAILY) }
+            usageFilter(
+                dailyUsage,
+                appInfo,
+                selectApp.value ?: emptyList(),
+            ).forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
 
             val weeklyUsage =
-                withContext(Dispatchers.IO) { usageFilter(getUsage(context, Interval.WEEKLY)) }
-            weeklyUsage.forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
+                withContext(Dispatchers.IO) { getUsage(context, Interval.WEEKLY) }
+            usageFilter(
+                weeklyUsage,
+                appInfo,
+                selectApp.value ?: emptyList(),
+            ).forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
 
             val monthlyUsage =
                 withContext(Dispatchers.IO) { getUsage(context, Interval.MONTHLY) }
-            monthlyUsage.forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
+            usageFilter(
+                monthlyUsage,
+                appInfo,
+                selectApp.value ?: emptyList(),
+            ).forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
 
             val yearlyUsage =
                 withContext(Dispatchers.IO) { getUsage(context, Interval.YEARLY) }
-            yearlyUsage.forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
+            usageFilter(
+                yearlyUsage,
+                appInfo,
+                selectApp.value ?: emptyList(),
+            ).forEach { usage: UsageEntity -> usageRepository.upsert(usage) }
         }
     }
 
-    private suspend fun getUsage(context: Context, interval: Interval): List<UsageEntity> {
-        return withContext(Dispatchers.IO) {
-            val dateFormatter = SimpleDateFormat(dateFormat[interval], Locale.getDefault())
-            val usageStatsManager =
-                context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-
-            val beginTime = Calendar.getInstance()
-            beginTime.add(Calendar.DAY_OF_YEAR, -99999)
-
-            val endTime = System.currentTimeMillis()
-
-            val usage = mutableListOf<UsageEntity>()
-
-            usageTimeMap[interval]?.let { intervalType ->
-                val usageStatsList = usageStatsManager.queryUsageStats(
-                    intervalType,
-                    beginTime.timeInMillis,
-                    endTime,
-                )
-                usageStatsList?.forEach { usageStats ->
-                    val date = dateFormatter.format(Date(usageStats.firstTimeStamp))
-                    val totalTime = usageStats.totalTimeInForeground
-                    if (totalTime / 1000 > 0) {
-                        val item = UsageEntity(
-                            usageStats.packageName,
-                            getAppInfo(context, usageStats.packageName).title,
-                            date,
-                            totalTime,
-                            interval,
-                            getAndroidId(),
-                        )
-                        usage.add(item)
-                    }
-                }
-            }
-            usage
+    fun addApp(appInfo: AppInfoEntity) {
+        viewModelScope.launch {
+            appInfoRepository.upsert(appInfo)
         }
     }
 
-    private suspend fun usageFilter(usage: List<UsageEntity>): List<UsageEntity> {
-        return withContext(Dispatchers.IO) {
-            val userInstalledApps = getUserInstalledApps(context)
-            usage
-                .filter { item ->
-                    userInstalledApps.any { app -> app.packageName == item.packageName }
-                }
+    fun removeApp(packageName: String) {
+        viewModelScope.launch {
+            appInfoRepository.delete(packageName)
         }
-    }
-
-    @SuppressLint("HardwareIds")
-    fun getAndroidId(): String {
-        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 }

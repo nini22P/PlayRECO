@@ -5,17 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,12 +14,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.nini22p.playreco.ui.AppNavHost
-import com.github.nini22p.playreco.ui.NavigationItem
+import com.github.nini22p.playreco.ui.Nav
+import com.github.nini22p.playreco.ui.NavHost
+import com.github.nini22p.playreco.ui.TopBar
 import com.github.nini22p.playreco.ui.Welcome
 import com.github.nini22p.playreco.ui.hasUsageStatsPermission
 import com.github.nini22p.playreco.ui.home.RefreshButton
@@ -69,7 +59,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayRECOApp() {
 
@@ -79,48 +68,16 @@ fun PlayRECOApp() {
 
     Scaffold(
         topBar = {
-            when (currentDestination?.route) {
-//                主屏幕
-                NavigationItem.Home.route ->
-                    TopAppBar(
-                        colors = topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        title = { Text(text = stringResource(R.string.app_name)) },
-                        actions = {
-                            IconButton(onClick = { navController.navigate(NavigationItem.Settings.route) }) {
-                                Icon(Icons.Filled.Settings, contentDescription = "Settings")
-                            }
-                        }
-                    )
-//                设置
-                NavigationItem.Settings.route ->
-                    TopAppBar(
-                        colors = topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
-                                )
-                            }
-                        },
-                        title = { Text(text = "Settings") },
-                    )
-            }
+            TopBar(navController)
         },
 //        bottomBar = { AppNavigationBar(navController) },
         floatingActionButton = {
             when (currentDestination?.route) {
-                NavigationItem.Home.route -> RefreshButton(viewModel)
+                Nav.Home.route -> RefreshButton(viewModel)
             }
         },
         content = { padding ->
-            AppNavHost(
+            NavHost(
                 modifier = Modifier.padding(padding),
                 navController,
                 viewModel

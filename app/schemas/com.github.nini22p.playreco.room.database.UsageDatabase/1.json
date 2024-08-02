@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "639e15d46bfc8b81412c966c5c93bd5b",
+    "identityHash": "2446803041566fca66d8197837c55d6b",
     "entities": [
       {
         "tableName": "usage",
@@ -56,12 +56,38 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "app_info",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`package_name` TEXT NOT NULL, `title` TEXT, PRIMARY KEY(`package_name`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "package_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "package_name"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '639e15d46bfc8b81412c966c5c93bd5b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2446803041566fca66d8197837c55d6b')"
     ]
   }
 }

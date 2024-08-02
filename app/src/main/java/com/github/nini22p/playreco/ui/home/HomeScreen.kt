@@ -3,15 +3,22 @@ package com.github.nini22p.playreco.ui.home
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Badge
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.nini22p.playreco.viewmodel.UsageViewModel
 import kotlinx.coroutines.delay
@@ -35,6 +43,7 @@ fun HomeScreen(viewModel: UsageViewModel = viewModel()) {
 
     val context = LocalContext.current
     val usage = viewModel.usage?.observeAsState(initial = emptyList())
+    val appInfo = viewModel.appInfo
 
     fun formatTime(milliseconds: Long): String {
         val seconds = milliseconds / 1000 % 60
@@ -46,8 +55,11 @@ fun HomeScreen(viewModel: UsageViewModel = viewModel()) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         if (usage != null) {
             items(usage.value) { item ->
-                ListItem(
-                    modifier = Modifier.clickable {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    onClick = {
                         Toast.makeText(
                             context,
                             "" +
@@ -60,14 +72,31 @@ fun HomeScreen(viewModel: UsageViewModel = viewModel()) {
                                     " ",
                             Toast.LENGTH_SHORT
                         ).show()
-                    },
-                    headlineContent = {
-                        Text(text = item.title ?: item.packageName, fontWeight = FontWeight.W500)
-                    },
-                    supportingContent = {
-                        Text(text = "${item.date} ${formatTime(item.totalTime)}")
+
                     }
-                )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = (appInfo.find { app -> app.packageName == item.packageName })?.title
+                                ?: item.title ?: item.packageName,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                                Text(item.date)
+                            }
+                            Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                                Text(formatTime(item.totalTime))
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }

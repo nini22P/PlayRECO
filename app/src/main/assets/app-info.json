@@ -1,0 +1,50 @@
+[
+  {
+    "packageName": "com.dsemu.drastic",
+    "title": "DraStic"
+  },
+  {
+    "packageName": "org.citra.citra_emu",
+    "title": "Citra"
+  },
+  {
+    "packageName": "com.swordfish.lemuroid",
+    "title": "Lemuroid"
+  },
+  {
+    "packageName": "com.MA.Polyfield",
+    "title": "Polyfield"
+  },
+  {
+    "packageName": "game.qualiarts.idolypride",
+    "title": "偶像荣耀"
+  },
+  {
+    "packageName": "com.neowiz.game.idolypride.tw",
+    "title": "偶像荣耀"
+  },
+  {
+    "packageName": "com.bandainamcoent.idolmaster_gakuen",
+    "title": "学园偶像大师"
+  },
+  {
+    "packageName": "com.klab.lovelive.allstars.global",
+    "title": "Love Live! AS"
+  },
+  {
+    "packageName": "com.bilibili.qnzl.bili",
+    "title": "千年之旅"
+  },
+  {
+    "packageName": "com.nineyou.fuxiao",
+    "title": "拂晓"
+  },
+  {
+    "packageName": "com.quanjiang.mnxs.sz",
+    "title": "玛娜希斯回响"
+  },
+  {
+    "packageName": "com.seasun.snowbreak.google",
+    "title": "尘白禁区"
+  }
+]
